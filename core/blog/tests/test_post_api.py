@@ -71,3 +71,15 @@ class TestPostAPI():
         response = self.client.delete(url)
         assert response.status_code == 204
         assert not Post.objects.filter(id=self.post.id).exists()
+
+    def test_post_creat_invalid_data(self):
+        url = reverse("blog:api-v1:post-list")
+        data = {
+            'author': self.profile.id,
+            'status': True,
+            'category': self.category.id,
+            'published_at': timezone.now().isoformat()
+        }
+        response = self.client.post(url, data)
+        assert response.status_code == 400
+
