@@ -2,19 +2,24 @@ name: Django Backend Test
 
 on:
   push:
-    branches: [ "main" ]
+    branches: ["main"]
   pull_request:
-    branches: [ "main" ]
+    branches: ["main"]
 
 jobs:
-
-  build:
-
+  test:
     runs-on: ubuntu-latest
 
     steps:
-    - uses: actions/checkout@v4
-    - name: setup the Docker compose
-      run: docker-compose up -d
-    - name: Run Tests
-      run: docker exec backen sh -c "flake8 & pytest ."
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Build and start containers
+        run: docker compose up -d --build
+
+      - name: Run flake8 and pytest
+        run: docker exec backend sh -c "flake8 && pytest ."
+
+      - name: Stop containers
+        if: always()
+        run: docker compose down
