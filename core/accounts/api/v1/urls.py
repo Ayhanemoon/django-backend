@@ -10,6 +10,8 @@ from rest_framework_simplejwt.views import (
     TokenVerifyView,
 )
 
+app_name = "api-v1"
+
 urlpatterns = [
     # Registration management
     path("register/", RegisterApiView.as_view(), name="register"),
@@ -21,7 +23,7 @@ urlpatterns = [
     path(
         "register/email-verify/resend/",
         ResendVerifyEmailApiView.as_view(),
-        name="email_verify",
+        name="email_verify_resend",
     ),
     # Password management
     path(
@@ -52,7 +54,7 @@ urlpatterns = [
         name="token_discard",
     ),
     # JWT authentication mechanism
-    path("jwt/create/", JWTObtainPairTokenApiView.as_view()),
+    path("jwt/create/", JWTObtainPairTokenApiView.as_view(), name="jwt_obtain_pair"),
     path("jwt/refresh/", TokenRefreshView.as_view(), name="jwt_refresh"),
     path("jwt/verify/", TokenVerifyView.as_view(), name="jwt_verify"),
     # User profile management
