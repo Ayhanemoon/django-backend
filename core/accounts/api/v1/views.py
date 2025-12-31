@@ -30,7 +30,7 @@ class RegisterApiView(generics.GenericAPIView):
             user = User.objects.get(email=serializer.validated_data["email"])
             token = RefreshToken.for_user(user).access_token
             current_site = get_current_site(request).domain
-            relativeLink = reverse("accounts:email_verify")
+            relativeLink = reverse("accounts:api-v1:email_verify")
             absurl = (
                 "http://"
                 + current_site
@@ -45,24 +45,47 @@ class RegisterApiView(generics.GenericAPIView):
             #  Util.send_email(data)
             data = {"email": user.email, "link": absurl, "site": current_site}
             Util.send_templated_email(
-                "emails/verification_template.html", data
+                "email/verification_template.html", data
             )
             return Response(serializer.data, status=status.HTTP_201_CREATED)
+        return Response(
+            serializer.errors, status=status.HTTP_400_BAD_REQUEST
+        )
 
 
 class VerifyEmailApiView(generics.GenericAPIView):
     serializer_class = EmailVerificationSerializer
 
+    # def get(self, request):
+    #     serializer = self.serializer_class(
+    #         data={"token": request.query_params.get("token")}
+    #     )
+    #     serializer.is_valid(raise_exception=True)
+
+    #     user = serializer.validated_data["user"]
+    #     if not user.is_verified:
+    #         user.is_verified = True
+    #         user.save()
+
+    #     return Response(
+    #         {"detail": "user verified successfully"},
+    #         status=status.HTTP_200_OK,
+    #     )
+    
     def post(self, request):
-        serializer = self.serializer_class(data=request.data)
+        serializer = self.serializer_class(daya=request.data)
         serializer.is_valid(raise_exception=True)
+
         user = serializer.validated_data["user"]
         if not user.is_verified:
             user.is_verified = True
             user.save()
+
         return Response(
-            {"detail": "user verified successfully"},
-            status=status.HTTP_200_OK,
+            {
+                "detail": "user verified successfully"
+            },
+            status=status.HTTP_200_OK
         )
 
 
@@ -170,7 +193,7 @@ class ResendVerifyEmailApiView(generics.GenericAPIView):
             user = serializer.validated_data["usrer"]
             token = RefreshToken.for_user(user).access_token
             current_site = get_current_site(request).domain
-            relativeLink = reverse("accounts:email_verify")
+            relativeLink = reverse("accounts:api-v1:email_verify_resend")
             absurl = (
                 "http://"
                 + current_site
@@ -186,7 +209,7 @@ class ResendVerifyEmailApiView(generics.GenericAPIView):
             #  Util.send_email(data)
             data = {"email": user.email, "link": absurl, "site": current_site}
             Util.send_templated_email(
-                "emails/verification_template.html", data
+                "email/verification_template.html", data
             )
 
             return Response(
@@ -207,7 +230,7 @@ class PasswordResetRequestEmailApiView(generics.GenericAPIView):
         serializer.is_valid(raise_exception=True)
         user = serializer.validated_data["user"]
         token = RefreshToken.for_user(user).access_token
-        relativeLink = "/accounts/reset-password"  # reverse('accounts:password-reset-confirm')
+        relativeLink = reverse('accounts:api-v1:reset-password-validate')
         current_site = get_current_site(request=request).domain
         absurl = (
             "http://" + current_site + relativeLink + "?token=" + str(token)
@@ -219,7 +242,7 @@ class PasswordResetRequestEmailApiView(generics.GenericAPIView):
 
         # Util.send_email(data)
         data = {"email": user.email, "link": absurl, "site": current_site}
-        Util.send_templated_email("emails/reset_password_template.html", data)
+        Util.send_templated_email("email/reset_password_template.html", data)
         return Response(
             {"success": "We have sent you a link to reset your password"},
             status=status.HTTP_200_OK,
@@ -231,14 +254,26 @@ class PasswordResetTokenValidateApiView(
 ):
     serializer_class = PasswordResetTokenVerificationSerializer
 
-    def post(self, request):
-        serializer = self.serializer_class(data=request.data)
-        serializer.is_valid(raise_exception=True)
+    # def get(self, request):
+    #     serializer = self.serializer_class(
+    #          data={"token": request.query_params.get("token")}
+    #     )
+    #     serializer.is_valid(raise_exception=True)
+
+    #     return Response(
+    #         {"detail": "Token is valid"}, status=status.HTTP_200_OK
+    #     )
+    
+    def post(self, request): 
+        Serializer = self.serializer_class(data=request.data)
+        Serializer.is_valid(raise_exception=True)
 
         return Response(
-            {"detail": "Token is valid"}, status=status.HTTP_200_OK
+            {
+                "detail": "Token is Valid"
+            },
+            status=status.HTTP_200_OK
         )
-
 
 class PasswordResetSetNewApiView(generics.GenericAPIView):
     serializer_class = SetNewPasswordSerializer

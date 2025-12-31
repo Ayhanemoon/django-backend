@@ -109,7 +109,7 @@ class EmailVerificationSerializer(serializers.ModelSerializer):
             )
             user = User.objects.get(id=payload["user_id"])
         except jwt.ExpiredSignatureError as identifier:
-            return ValidationError({"detail": "Activation Expired"})
+            raise ValidationError({"detail": "Activation Expired"})
         except jwt.exceptions.DecodeError as identifier:
             raise ValidationError({"detail": "Invalid token"})
 
@@ -249,7 +249,7 @@ class PasswordResetRequestEmailSerializer(serializers.Serializer):
             user = User.objects.get(email=attrs["email"])
         except User.DoesNotExist:
             raise ValidationError(
-                {"detail": "There is no user with provided email"}
+                {"detail": "There is no user with provided email"},
             )
         attrs["user"] = user
         return super().validate(attrs)
@@ -270,7 +270,7 @@ class PasswordResetTokenVerificationSerializer(serializers.ModelSerializer):
             )
             user = User.objects.get(id=payload["user_id"])
         except jwt.ExpiredSignatureError as identifier:
-            return ValidationError({"detail": "Token expired"})
+            raise ValidationError({"detail": "Token expired"})
         except jwt.exceptions.DecodeError as identifier:
             raise ValidationError({"detail": "Token invalid"})
 
