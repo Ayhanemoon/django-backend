@@ -1,2 +1,2 @@
 # django-blog
-backend app for blog
+backend app for projects
