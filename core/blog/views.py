@@ -3,6 +3,7 @@ from .models import Post
 
 # Create your views here
 
+
 class PostListView(TemplateView):
     """Class-based view for the blog index page."""
 
@@ -26,4 +27,3 @@ class DetailView(TemplateView):
         pk = self.kwargs.get("pk")
         context["post"] = Post.objects.get(pk=pk)
         return context
-

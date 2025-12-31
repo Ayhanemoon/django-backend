@@ -14,7 +14,7 @@ class PostModelViewSet(viewsets.ModelViewSet):
 
     permission_classes = [IsAuthenticatedOrReadOnly, IsOwnerOrReadOnly]
     serializer_class = PostSerializer
-    queryset = Post.objects.all().order_by('-published_at')
+    queryset = Post.objects.all().order_by("-published_at")
     filter_backends = [DjangoFilterBackend, SearchFilter, OrderingFilter]
     filterset_class = PostFilter
     search_fields = ["title", "content"]

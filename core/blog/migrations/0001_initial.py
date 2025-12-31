@@ -43,9 +43,7 @@ class Migration(migrations.Migration):
                 ),
                 (
                     "image",
-                    models.ImageField(
-                        blank=True, null=True, upload_to="blog_images/"
-                    ),
+                    models.ImageField(blank=True, null=True, upload_to="blog_images/"),
                 ),
                 ("title", models.CharField(max_length=250)),
                 ("content", models.TextField()),

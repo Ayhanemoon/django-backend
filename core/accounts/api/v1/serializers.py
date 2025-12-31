@@ -39,9 +39,7 @@ class RegisterSerializer(serializers.ModelSerializer):
 
     def validate(self, attrs):
         if attrs.get("password") != attrs.get("password1"):
-            raise serializers.ValidationError(
-                {"details": "Passwords does not match"}
-            )
+            raise serializers.ValidationError({"details": "Passwords does not match"})
         try:
             validate_password(attrs.get("password"))
         except ValidationError as e:
@@ -82,15 +80,11 @@ class ChangePasswordSerializer(serializers.Serializer):
 
     def validate(self, attrs):
         if attrs["new_password"] != attrs["new_password1"]:
-            raise serializers.ValidationError(
-                {"details": "Passwords does not match"}
-            )
+            raise serializers.ValidationError({"details": "Passwords does not match"})
         try:
             validate_password(attrs.get("new_password"))
         except ValidationError as e:
-            raise serializers.ValidationError(
-                {"new_password": list(e.messages)}
-            )
+            raise serializers.ValidationError({"new_password": list(e.messages)})
         return super().validate(attrs)
 
 
@@ -104,13 +98,11 @@ class EmailVerificationSerializer(serializers.ModelSerializer):
     def validate(self, attrs):
         token = attrs["token"]
         try:
-            payload = jwt.decode(
-                token, settings.SECRET_KEY, algorithms=["HS256"]
-            )
+            payload = jwt.decode(token, settings.SECRET_KEY, algorithms=["HS256"])
             user = User.objects.get(id=payload["user_id"])
-        except jwt.ExpiredSignatureError as identifier:
+        except jwt.ExpiredSignatureError:
             raise ValidationError({"detail": "Activation Expired"})
-        except jwt.exceptions.DecodeError as identifier:
+        except jwt.exceptions.DecodeError:
             raise ValidationError({"detail": "Invalid token"})
 
         attrs["user"] = user
@@ -119,9 +111,7 @@ class EmailVerificationSerializer(serializers.ModelSerializer):
 
 class ObtainTokenSerializer(serializers.ModelSerializer):
     email = serializers.EmailField(min_length=6, write_only=True)
-    password = serializers.CharField(
-        max_length=68, min_length=6, write_only=True
-    )
+    password = serializers.CharField(max_length=68, min_length=6, write_only=True)
 
     class Meta:
         model = User
@@ -133,13 +123,9 @@ class ObtainTokenSerializer(serializers.ModelSerializer):
         filtered_user_by_email = User.objects.filter(email=email)
         user = auth.authenticate(email=email, password=password)
 
-        if (
-            filtered_user_by_email.exists()
-            and filtered_user_by_email[0].auth_provider != "email"
-        ):
+        if filtered_user_by_email.exists() and filtered_user_by_email[0].auth_provider != "email":
             raise AuthenticationFailed(
-                detail="Please continue your login using "
-                + filtered_user_by_email[0].auth_provider
+                detail=f"Please continue your login using {filtered_user_by_email[0].auth_provider}"
             )
 
         if not user:
@@ -154,9 +140,7 @@ class ObtainTokenSerializer(serializers.ModelSerializer):
 
 class JWTObtainPairTokenSerializer(serializers.ModelSerializer):
     email = serializers.EmailField(min_length=6, write_only=True)
-    password = serializers.CharField(
-        max_length=68, min_length=6, write_only=True
-    )
+    password = serializers.CharField(max_length=68, min_length=6, write_only=True)
 
     class Meta:
         model = User
@@ -168,13 +152,9 @@ class JWTObtainPairTokenSerializer(serializers.ModelSerializer):
         filtered_user_by_email = User.objects.filter(email=email)
         user = auth.authenticate(email=email, password=password)
 
-        if (
-            filtered_user_by_email.exists()
-            and filtered_user_by_email[0].auth_provider != "email"
-        ):
+        if filtered_user_by_email.exists() and filtered_user_by_email[0].auth_provider != "email":
             raise AuthenticationFailed(
-                detail="Please continue your login using "
-                + filtered_user_by_email[0].auth_provider
+                detail=f"Please continue your login using {filtered_user_by_email[0].auth_provider}"
             )
 
         if not user:
@@ -194,13 +174,9 @@ class CustomTokenObtainPairSerializer(TokenObtainPairSerializer):
         filtered_user_by_email = User.objects.filter(email=email)
         user = auth.authenticate(email=email, password=password)
 
-        if (
-            filtered_user_by_email.exists()
-            and filtered_user_by_email[0].auth_provider != "email"
-        ):
+        if filtered_user_by_email.exists() and filtered_user_by_email[0].auth_provider != "email":
             raise AuthenticationFailed(
-                detail="Please continue your login using "
-                + filtered_user_by_email[0].auth_provider
+                detail=f"Please continue your login using {filtered_user_by_email[0].auth_provider}"
             )
 
         if not user:
@@ -231,9 +207,7 @@ class ResendVerifyTokenSerializer(serializers.ModelSerializer):
                 {"details": "User with given email does not exist"}
             )
         if user.is_verified:
-            raise serializers.ValidationError(
-                {"details": "User already verified"}
-            )
+            raise serializers.ValidationError({"details": "User already verified"})
         attrs["user"] = user
         return attrs
 
@@ -265,13 +239,11 @@ class PasswordResetTokenVerificationSerializer(serializers.ModelSerializer):
     def validate(self, attrs):
         token = attrs["token"]
         try:
-            payload = jwt.decode(
-                token, settings.SECRET_KEY, algorithms=["HS256"]
-            )
+            payload = jwt.decode(token, settings.SECRET_KEY, algorithms=["HS256"])
             user = User.objects.get(id=payload["user_id"])
-        except jwt.ExpiredSignatureError as identifier:
+        except jwt.ExpiredSignatureError:
             raise ValidationError({"detail": "Token expired"})
-        except jwt.exceptions.DecodeError as identifier:
+        except jwt.exceptions.DecodeError:
             raise ValidationError({"detail": "Token invalid"})
 
         attrs["user"] = user
@@ -280,31 +252,23 @@ class PasswordResetTokenVerificationSerializer(serializers.ModelSerializer):
 
 class SetNewPasswordSerializer(serializers.Serializer):
     token = serializers.CharField(max_length=600)
-    password = serializers.CharField(
-        min_length=6, max_length=68, write_only=True
-    )
-    password1 = serializers.CharField(
-        min_length=6, max_length=68, write_only=True
-    )
+    password = serializers.CharField(min_length=6, max_length=68, write_only=True)
+    password1 = serializers.CharField(min_length=6, max_length=68, write_only=True)
 
     class Meta:
         fields = ["password", "password1", "token"]
 
     def validate(self, attrs):
         if attrs["password"] != attrs["password1"]:
-            raise serializers.ValidationError(
-                {"details": "Passwords does not match"}
-            )
+            raise serializers.ValidationError({"details": "Passwords does not match"})
         try:
             password = attrs.get("password")
             token = attrs.get("token")
-            payload = jwt.decode(
-                token, settings.SECRET_KEY, algorithms=["HS256"]
-            )
+            payload = jwt.decode(token, settings.SECRET_KEY, algorithms=["HS256"])
             user = User.objects.get(id=payload["user_id"])
             user.set_password(password)
             user.save()
 
             return super().validate(attrs)
-        except Exception as e:
+        except Exception:
             raise AuthenticationFailed("The reset link is invalid", 401)

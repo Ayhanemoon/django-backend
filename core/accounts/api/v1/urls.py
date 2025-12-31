@@ -1,9 +1,16 @@
 from django.urls import path
 from .views import (
-    RegisterApiView, VerifyEmailApiView, ResendVerifyEmailApiView,
-    ChangePasswordView, PasswordResetRequestEmailApiView, PasswordResetTokenValidateApiView,
-    PasswordResetSetNewApiView, ObtainTokenApiView, DiscardAuthTokenApiView,
-    JWTObtainPairTokenApiView, ProfileApiView,
+    RegisterApiView,
+    VerifyEmailApiView,
+    ResendVerifyEmailApiView,
+    ChangePasswordView,
+    PasswordResetRequestEmailApiView,
+    PasswordResetTokenValidateApiView,
+    PasswordResetSetNewApiView,
+    ObtainTokenApiView,
+    DiscardAuthTokenApiView,
+    JWTObtainPairTokenApiView,
+    ProfileApiView,
 )
 from rest_framework_simplejwt.views import (
     TokenRefreshView,
