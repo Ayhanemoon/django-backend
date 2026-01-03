@@ -52,6 +52,7 @@ INSTALLED_APPS = [
     "drf_yasg",
     "corsheaders",
     "mail_templated",
+    "django_celery_beat",
 ]
 
 MIDDLEWARE = [
@@ -170,3 +171,6 @@ EMAIL_HOST = "smtp4dev"
 EMAIL_PORT = 25
 
 SWAGGER_USE_COMPAT_RENDERERS = False
+
+# Celery Config
+CELERY_BROKER_URL='redis://redis:6379/1'
