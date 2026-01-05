@@ -3,7 +3,7 @@ from django.contrib.auth.models import Group, Permission
 
 
 ROLE_PERMISSIONS = {
-    "Admin": ["*"],  # wildcard = all permissions
+    "Admin": ["*"],  # Admin gets all permissions
     "Accountant": [
         "view_order",
         "change_order",
@@ -14,6 +14,16 @@ ROLE_PERMISSIONS = {
         "view_order",
         "change_order",
         "view_product",
+    ],
+    "Blog Writer": [
+        "add_post",
+        "change_post",
+        "delete_post",
+        "view_post",
+        "add_category",
+        "change_category",
+        "delete_category",
+        "view_category",
     ],
 }
 
@@ -26,19 +36,23 @@ class Command(BaseCommand):
             group, created = Group.objects.get_or_create(name=role_name)
             self.stdout.write(f"{'Created' if created else 'Exists'} group: {role_name}")
 
+            permissions_to_assign = []
+
             if "*" in perms:
-                permissions = Permission.objects.all()
+                # Admin: assign all permissions
+                permissions_to_assign = Permission.objects.all()
             else:
-                permissions = []
                 for perm_codename in perms:
                     try:
                         perm = Permission.objects.get(codename=perm_codename)
-                        permissions.append(perm)
+                        permissions_to_assign.append(perm)
                     except Permission.DoesNotExist:
                         self.stdout.write(
-                            f"WARNING: Permission {perm_codename} does not exist yet."
+                            f"WARNING: Permission {perm_codename} does not exist yet, skipping."
                         )
 
-            group.permissions.set(permissions)
+            group.permissions.set(permissions_to_assign)
             group.save()
-            self.stdout.write(self.style.SUCCESS(f"Permissions assigned to {role_name}"))
+            self.stdout.write(
+                self.style.SUCCESS(f"Permissions assigned to {role_name}")
+            )
