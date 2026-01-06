@@ -1,5 +1,5 @@
 import pytest
-from accounts.models import Address, User
+from accounts.models import Address, User, Profile
 
 
 @pytest.mark.django_db
@@ -9,8 +9,10 @@ def test_user_can_have_multiple_addresses():
         password="password123",
     )
 
+    profile = Profile.objects.get(user=user)
+
     Address.objects.create(
-        user=user,
+        profile=profile,
         title="Home",
         receiver_name="John Doe",
         phone_number="09120000000",
@@ -22,7 +24,7 @@ def test_user_can_have_multiple_addresses():
     )
 
     Address.objects.create(
-        user=user,
+        profile=profile,
         title="Office",
         receiver_name="John Doe",
         phone_number="09120000000",
@@ -32,7 +34,7 @@ def test_user_can_have_multiple_addresses():
         address_line_1="Street 2",
     )
 
-    assert user.addresses.count() == 2
+    assert profile.addresses.count() == 2
 
 
 @pytest.mark.django_db
@@ -41,9 +43,10 @@ def test_only_one_default_address_per_user():
         email="test2@example.com",
         password="password123",
     )
+    profile = Profile.objects.get(user=user)
 
     addr1 = Address.objects.create(
-        user=user,
+        profile=profile,
         title="Home",
         receiver_name="John",
         phone_number="0912",
@@ -55,7 +58,7 @@ def test_only_one_default_address_per_user():
     )
 
     addr2 = Address.objects.create(
-        user=user,
+        profile=profile,
         title="Office",
         receiver_name="John",
         phone_number="0912",

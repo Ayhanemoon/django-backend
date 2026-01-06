@@ -7,7 +7,7 @@ from django.db.models.signals import post_save
 class Profile(models.Model):
     """User profile model to store additional information about the user."""
 
-    user = models.ForeignKey(User, on_delete=models.CASCADE)
+    user = models.OneToOneField(User, on_delete=models.CASCADE, related_name="profile")
     first_name = models.CharField(max_length=255, blank=True, null=True)
     last_name = models.CharField(max_length=255, blank=True, null=True)
     image = models.ImageField(upload_to="profiles/", blank=True, null=True)

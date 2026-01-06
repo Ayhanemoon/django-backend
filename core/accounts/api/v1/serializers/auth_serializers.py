@@ -2,7 +2,7 @@ from rest_framework_simplejwt.serializers import TokenObtainPairSerializer
 from django.core.exceptions import ValidationError
 from django.contrib.auth.password_validation import validate_password
 from rest_framework import serializers
-from accounts.models import User, Profile
+from accounts.models import User
 from django.contrib.auth import get_user_model
 from django.contrib import auth
 from rest_framework.exceptions import AuthenticationFailed
@@ -49,23 +49,6 @@ class RegisterSerializer(serializers.ModelSerializer):
     def create(self, validated_data):
         validated_data.pop("password1")
         return User.objects.create_user(**validated_data)
-
-
-class ProfileSerializer(serializers.ModelSerializer):
-    """Profile serializer to manage extra user info"""
-
-    email = serializers.EmailField(source="user.email", read_only=True)
-
-    class Meta:
-        model = Profile
-        fields = [
-            "id",
-            "email",
-            "first_name",
-            "last_name",
-            "image",
-            "description",
-        ]
 
 
 class ChangePasswordSerializer(serializers.Serializer):
