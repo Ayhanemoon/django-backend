@@ -2,12 +2,14 @@ from rest_framework.response import Response
 from rest_framework import generics, status, views, mixins, viewsets, permissions
 from rest_framework.exceptions import PermissionDenied
 from rest_framework.permissions import IsAuthenticated
+from rest_framework.decorators import action
 from django.shortcuts import get_object_or_404
 from accounts.models import User, Profile, Address
 from django.contrib.sites.shortcuts import get_current_site
 from django.urls import reverse
 from rest_framework.authtoken.models import Token
 from rest_framework_simplejwt.tokens import RefreshToken
+from .permissions import IsOwnerOfAddress
 from .serializers import (
     RegisterSerializer,
     EmailVerificationSerializer,
@@ -258,27 +260,33 @@ class PasswordResetSetNewApiView(generics.GenericAPIView):
             status=status.HTTP_200_OK,
         )
 
-
 class AddressViewSet(viewsets.ModelViewSet):
     serializer_class = AddressSerializer
-    permission_classes = [permissions.IsAuthenticated]
+    permission_classes = [permissions.IsAuthenticated, IsOwnerOfAddress]
 
     def get_queryset(self):
-        # Users can only see their own addresses
-        return Address.objects.filter(profile=self.request.user.profile)
+        # Full queryset for object-level permission enforcement
+        return Address.objects.all()
+
+    def list(self, request, *args, **kwargs):
+        # Only show user's own addresses
+        queryset = Address.objects.filter(profile=request.user.profile)
+        serializer = self.get_serializer(queryset, many=True)
+        return Response(serializer.data)
 
     def perform_create(self, serializer):
-        # Automatically assign current user
         serializer.save(profile=self.request.user.profile)
 
-    def perform_update(self, serializer):
-        # Ensure user cannot update someone else's address
-        if serializer.instance.profile != self.request.user.profile:
-            raise PermissionDenied("You cannot edit another user's address.")
-        serializer.save()
-
-    def perform_destroy(self, instance):
-        # Ensure user cannot delete someone else's address
-        if instance.profile != self.request.user.profile:
-            raise PermissionDenied("You cannot delete another user's address.")
-        instance.delete()
+    @action(detail=False, methods=["get"], url_path="default")
+    def default_address(self, request):
+        """
+        Retrieve the default address for the logged-in user's profile.
+        """
+        default_address = Address.objects.filter(profile=request.user.profile, is_default=True).first()
+        if not default_address:
+            return Response(
+                {"detail": "No default address found."},
+                status=status.HTTP_404_NOT_FOUND,
+            )
+        serializer = self.get_serializer(default_address)
+        return Response(serializer.data, status=status.HTTP_200_OK)
