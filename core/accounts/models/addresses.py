@@ -1,4 +1,5 @@
 from django.db import models
+from django.db.models import Q
 
 
 class Address(models.Model):
@@ -38,6 +39,13 @@ class Address(models.Model):
         ordering = ["-is_default", "-created_at"]
         indexes = [
             models.Index(fields=["profile", "is_default"]),
+        ]
+        constraints = [
+            models.UniqueConstraint(
+                fields=["profile"],
+                condition=Q(is_default=True),
+                name="unique_default_address_per_profile",
+            )
         ]
 
     def __str__(self):
