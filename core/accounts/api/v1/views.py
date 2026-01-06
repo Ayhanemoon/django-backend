@@ -1,6 +1,5 @@
 from rest_framework.response import Response
 from rest_framework import generics, status, views, mixins, viewsets, permissions
-from rest_framework.exceptions import PermissionDenied
 from rest_framework.permissions import IsAuthenticated
 from rest_framework.decorators import action
 from django.shortcuts import get_object_or_404
@@ -260,29 +259,34 @@ class PasswordResetSetNewApiView(generics.GenericAPIView):
             status=status.HTTP_200_OK,
         )
 
+
 class AddressViewSet(viewsets.ModelViewSet):
     serializer_class = AddressSerializer
     permission_classes = [permissions.IsAuthenticated, IsOwnerOfAddress]
 
     def get_queryset(self):
         # Full queryset for object-level permission enforcement
-        return Address.objects.all()
+        return Address.objects.alive()
 
     def list(self, request, *args, **kwargs):
         # Only show user's own addresses
-        queryset = Address.objects.filter(profile=request.user.profile)
+        queryset = Address.objects.alive().filter(profile=request.user.profile)
         serializer = self.get_serializer(queryset, many=True)
         return Response(serializer.data)
 
     def perform_create(self, serializer):
         serializer.save(profile=self.request.user.profile)
 
+    def perform_destroy(self, instance):
+        # Soft delete the address
+        instance.soft_delete()
+
     @action(detail=False, methods=["get"], url_path="default")
     def default_address(self, request):
         """
         Retrieve the default address for the logged-in user's profile.
         """
-        default_address = Address.objects.filter(profile=request.user.profile, is_default=True).first()
+        default_address = Address.objects.alive().filter(profile=request.user.profile, is_default=True).first()
         if not default_address:
             return Response(
                 {"detail": "No default address found."},
