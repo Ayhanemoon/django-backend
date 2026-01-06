@@ -55,7 +55,7 @@ admin.site.register(User, CustomUserAdmin)
 @admin.register(Address)
 class AddressAdmin(admin.ModelAdmin):
     list_display = (
-        "user",
+        "profile",
         "title",
         "city",
         "state",
@@ -64,7 +64,7 @@ class AddressAdmin(admin.ModelAdmin):
     )
     list_filter = ("is_default", "city", "state")
     search_fields = (
-        "user__email",
+        "profile__user__email",
         "receiver_name",
         "phone_number",
         "postal_code",

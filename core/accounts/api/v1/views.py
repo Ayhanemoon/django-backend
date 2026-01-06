@@ -1,8 +1,9 @@
 from rest_framework.response import Response
-from rest_framework import generics, status, views, mixins
+from rest_framework import generics, status, views, mixins, viewsets, permissions
+from rest_framework.exceptions import PermissionDenied
 from rest_framework.permissions import IsAuthenticated
 from django.shortcuts import get_object_or_404
-from accounts.models import User, Profile
+from accounts.models import User, Profile, Address
 from django.contrib.sites.shortcuts import get_current_site
 from django.urls import reverse
 from rest_framework.authtoken.models import Token
@@ -18,6 +19,7 @@ from .serializers import (
     PasswordResetRequestEmailSerializer,
     PasswordResetTokenVerificationSerializer,
     SetNewPasswordSerializer,
+    AddressSerializer
 )
 from ..utils import Util
 
@@ -255,3 +257,28 @@ class PasswordResetSetNewApiView(generics.GenericAPIView):
             {"detail": "Password reset successfully"},
             status=status.HTTP_200_OK,
         )
+
+
+class AddressViewSet(viewsets.ModelViewSet):
+    serializer_class = AddressSerializer
+    permission_classes = [permissions.IsAuthenticated]
+
+    def get_queryset(self):
+        # Users can only see their own addresses
+        return Address.objects.filter(profile=self.request.user.profile)
+
+    def perform_create(self, serializer):
+        # Automatically assign current user
+        serializer.save(profile=self.request.user.profile)
+
+    def perform_update(self, serializer):
+        # Ensure user cannot update someone else's address
+        if serializer.instance.profile != self.request.user.profile:
+            raise PermissionDenied("You cannot edit another user's address.")
+        serializer.save()
+
+    def perform_destroy(self, instance):
+        # Ensure user cannot delete someone else's address
+        if instance.profile != self.request.user.profile:
+            raise PermissionDenied("You cannot delete another user's address.")
+        instance.delete()

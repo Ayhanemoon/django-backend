@@ -1,4 +1,5 @@
-from django.urls import path
+from rest_framework.routers import DefaultRouter
+from django.urls import path, include
 from .views import (
     RegisterApiView,
     VerifyEmailApiView,
@@ -11,6 +12,7 @@ from .views import (
     DiscardAuthTokenApiView,
     JWTObtainPairTokenApiView,
     ProfileApiView,
+    AddressViewSet
 )
 from rest_framework_simplejwt.views import (
     TokenRefreshView,
@@ -66,4 +68,11 @@ urlpatterns = [
     path("jwt/verify/", TokenVerifyView.as_view(), name="jwt_verify"),
     # User profile management
     path("profile/", ProfileApiView.as_view(), name="profile"),
+]
+
+# Add the router URLs for ViewSets (Address API)
+router = DefaultRouter()
+router.register(r"addresses", AddressViewSet, basename="address")
+urlpatterns += [
+    path("", include(router.urls)),
 ]

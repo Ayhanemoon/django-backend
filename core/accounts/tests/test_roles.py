@@ -18,7 +18,6 @@ def test_setup_roles_groups_exist():
         g = Group.objects.get(name=role)
         assert g is not None, f"{role} group should exist"
 
-    
     # Blog Writer should only have Post/Category permissions (if they exist)
     blog_writer = Group.objects.get(name="Blog Writer")
     for perm in blog_writer.permissions.all():
