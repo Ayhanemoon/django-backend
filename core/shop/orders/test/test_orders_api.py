@@ -32,15 +32,31 @@ class TestOrdersAPI:
     def test_create_order(self):
         url = reverse("orders:api-v1:order-list")
         data = {
-            "profile": self.profile.id,
+            "address_id": self.address.id
         }
+
         response = self.client.post(url, data)
+
         assert response.status_code == 201
-        assert Order.objects.filter(profile=self.profile).exists()
+
+        order = Order.objects.get(profile=self.profile)
+        assert order.address_snapshot is not None
+        assert order.address_snapshot["city"] == "Tehran"
+        assert order.address_snapshot["address_line_1"] == "123 Main St"
 
     def test_get_order_list(self):
-        Order.objects.create(profile=self.profile)
+        Order.objects.create(
+            profile=self.profile,
+            address_snapshot={
+                "city": "Tehran",
+                "address_line_1": "123 Main St",
+                "postal_code": "11111",
+                "country": "Iran",
+            },
+        )
+
         url = reverse("orders:api-v1:order-list")
         response = self.client.get(url)
+
         assert response.status_code == 200
-        assert len(response.data) > 0
+        assert len(response.data) == 1
