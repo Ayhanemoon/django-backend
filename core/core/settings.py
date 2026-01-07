@@ -54,6 +54,7 @@ INSTALLED_APPS = [
     "mail_templated",
     "django_celery_beat",
     "shop.orders",
+    "shop.products",
 ]
 
 MIDDLEWARE = [
