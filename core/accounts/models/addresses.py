@@ -1,4 +1,7 @@
 from django.db import models
+from django.db.models import Q
+from django.utils import timezone
+from .querysets import AddressManager
 
 
 class Address(models.Model):
@@ -31,13 +34,26 @@ class Address(models.Model):
 
     is_default = models.BooleanField(default=False)
 
+    deleted_at = models.DateTimeField(blank=True, null=True)
+
     created_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)
+
+    objects = AddressManager()
+    objects_all = models.Manager()  # Default manager to access all records
 
     class Meta:
         ordering = ["-is_default", "-created_at"]
         indexes = [
             models.Index(fields=["profile", "is_default"]),
+            models.Index(fields=["deleted_at"]),
+        ]
+        constraints = [
+            models.UniqueConstraint(
+                fields=["profile"],
+                condition=Q(is_default=True),
+                name="unique_default_address_per_profile",
+            )
         ]
 
     def __str__(self):
@@ -51,3 +67,11 @@ class Address(models.Model):
             ).exclude(pk=self.pk).update(is_default=False)
 
         super().save(*args, **kwargs)
+
+    def soft_delete(self):
+        self.deleted_at = timezone.now()
+        self.is_default = False
+        self.save(update_fields=["deleted_at", "is_default"])
+
+    def hard_delete(self):
+        super().delete()

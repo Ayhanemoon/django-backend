@@ -53,6 +53,7 @@ INSTALLED_APPS = [
     "corsheaders",
     "mail_templated",
     "django_celery_beat",
+    "shop.orders",
 ]
 
 MIDDLEWARE = [
