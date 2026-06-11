@@ -26,14 +26,12 @@ class TestOrdersAPI:
             state="Tehran",
             postal_code="11111",
             country="Iran",
-            is_default=True
+            is_default=True,
         )
 
     def test_create_order(self):
         url = reverse("orders:api-v1:order-list")
-        data = {
-            "address_id": self.address.id
-        }
+        data = {"address_id": self.address.id}
 
         response = self.client.post(url, data)
 
@@ -60,3 +58,21 @@ class TestOrdersAPI:
 
         assert response.status_code == 200
         assert len(response.data) == 1
+
+    def test_retrieve_order_with_items(self):
+        order = Order.objects.create(
+            profile=self.profile,
+            address_snapshot={
+                "city": "Tehran",
+                "address_line_1": "123 Main St",
+                "postal_code": "11111",
+                "country": "Iran",
+            },
+        )
+
+        url = reverse("orders:api-v1:order-detail", args=[order.id])
+        response = self.client.get(url)
+
+        assert response.status_code == 200
+        assert response.data["id"] == order.id
+        assert response.data["items"] == []

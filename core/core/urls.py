@@ -41,8 +41,11 @@ urlpatterns = [
     path("admin/", admin.site.urls),
     path("accounts/", include("accounts.urls")),
     path("blog/", include("blog.urls")),
-    path("orders/", include("shop.orders.urls")),
-    path("products/", include("shop.products.urls")),
+    path("shop/api/v1/", include("shop.urls")),
+    # path("shop-orders/", include("shop.orders.urls")),
+    # path("shop-products/", include("shop.products.urls")),
+    # path("payments/", include("shop.payments.urls")),
+    # path("shop-cart/", include("shop.cart.urls")),
     path("api-auth/", include("rest_framework.urls")),
     # path('api-docs/', include_docs_urls(title='Blog API')),
     path(

@@ -6,17 +6,29 @@ from django.db import migrations, models
 class Migration(migrations.Migration):
 
     dependencies = [
-        ('orders', '0003_order_total_amount'),
+        ("orders", "0003_order_total_amount"),
     ]
 
     operations = [
         migrations.AlterField(
-            model_name='order',
-            name='status',
-            field=models.CharField(choices=[('pending', 'Pending'), ('processing', 'Processing'), ('shipped', 'Shipped'), ('delivered', 'Delivered'), ('canceled', 'Canceled')], default='pending', max_length=50),
+            model_name="order",
+            name="status",
+            field=models.CharField(
+                choices=[
+                    ("pending", "Pending"),
+                    ("processing", "Processing"),
+                    ("shipped", "Shipped"),
+                    ("delivered", "Delivered"),
+                    ("canceled", "Canceled"),
+                ],
+                default="pending",
+                max_length=50,
+            ),
         ),
         migrations.AddIndex(
-            model_name='order',
-            index=models.Index(fields=['created_at'], name='orders_orde_created_0e92de_idx'),
+            model_name="order",
+            index=models.Index(
+                fields=["created_at"], name="orders_orde_created_0e92de_idx"
+            ),
         ),
     ]

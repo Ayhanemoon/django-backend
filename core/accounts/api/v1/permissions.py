@@ -9,4 +9,4 @@ class IsOwnerOfAddress(permissions.BasePermission):
     def has_object_permission(self, request, view, obj):
         # Assuming the Address model has a 'profile' field that links to the Profile model,
         # and Profile has a 'user' field that links to the User model.
-        return obj.profile == getattr(request.user, 'profile', None)
+        return obj.profile == getattr(request.user, "profile", None)

@@ -34,7 +34,9 @@ class Command(BaseCommand):
     def handle(self, *args, **options):
         for role_name, perms in ROLE_PERMISSIONS.items():
             group, created = Group.objects.get_or_create(name=role_name)
-            self.stdout.write(f"{'Created' if created else 'Exists'} group: {role_name}")
+            self.stdout.write(
+                f"{'Created' if created else 'Exists'} group: {role_name}"
+            )
 
             permissions_to_assign = []
 

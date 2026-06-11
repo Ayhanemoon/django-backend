@@ -64,7 +64,9 @@ class Address(models.Model):
             Address.objects.filter(
                 profile=self.profile,
                 is_default=True,
-            ).exclude(pk=self.pk).update(is_default=False)
+            ).exclude(
+                pk=self.pk
+            ).update(is_default=False)
 
         super().save(*args, **kwargs)
 

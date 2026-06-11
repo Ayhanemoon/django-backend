@@ -6,17 +6,19 @@ from django.db import migrations, models
 class Migration(migrations.Migration):
 
     dependencies = [
-        ('accounts', '0012_address_unique_default_address_per_profile'),
+        ("accounts", "0012_address_unique_default_address_per_profile"),
     ]
 
     operations = [
         migrations.AddField(
-            model_name='address',
-            name='deleted_at',
+            model_name="address",
+            name="deleted_at",
             field=models.DateTimeField(blank=True, null=True),
         ),
         migrations.AddIndex(
-            model_name='address',
-            index=models.Index(fields=['deleted_at'], name='accounts_ad_deleted_201a93_idx'),
+            model_name="address",
+            index=models.Index(
+                fields=["deleted_at"], name="accounts_ad_deleted_201a93_idx"
+            ),
         ),
     ]

@@ -39,8 +39,22 @@ class TestAddressAPI:
 
     def test_list_addresses(self):
         # Pre-create some addresses
-        Address.objects.create(profile=self.profile, title="Home", address_line_1="123", city="Tehran", postal_code="11111", country="Iran")
-        Address.objects.create(profile=self.profile, title="Work", address_line_1="456", city="Tehran", postal_code="22222", country="Iran")
+        Address.objects.create(
+            profile=self.profile,
+            title="Home",
+            address_line_1="123",
+            city="Tehran",
+            postal_code="11111",
+            country="Iran",
+        )
+        Address.objects.create(
+            profile=self.profile,
+            title="Work",
+            address_line_1="456",
+            city="Tehran",
+            postal_code="22222",
+            country="Iran",
+        )
 
         url = reverse("accounts:api-v1:address-list")
         response = self.client.get(url)
@@ -51,14 +65,28 @@ class TestAddressAPI:
         assert "Work" in titles
 
     def test_retrieve_address(self):
-        address = Address.objects.create(profile=self.profile, title="Home", address_line_1="123", city="Tehran", postal_code="11111", country="Iran")
+        address = Address.objects.create(
+            profile=self.profile,
+            title="Home",
+            address_line_1="123",
+            city="Tehran",
+            postal_code="11111",
+            country="Iran",
+        )
         url = reverse("accounts:api-v1:address-detail", args=[address.id])
         response = self.client.get(url)
         assert response.status_code == status.HTTP_200_OK
         assert response.data["title"] == "Home"
 
     def test_update_address(self):
-        address = Address.objects.create(profile=self.profile, title="Home", address_line_1="123", city="Tehran", postal_code="11111", country="Iran")
+        address = Address.objects.create(
+            profile=self.profile,
+            title="Home",
+            address_line_1="123",
+            city="Tehran",
+            postal_code="11111",
+            country="Iran",
+        )
         url = reverse("accounts:api-v1:address-detail", args=[address.id])
         data = {"title": "Updated Home"}
         response = self.client.patch(url, data)
@@ -85,7 +113,7 @@ class TestAddressAPI:
         assert address.deleted_at is not None
         assert not Address.objects.alive().filter(id=address.id).exists()
 
-    '''def test_cannot_access_other_users_address(self):
+    """def test_cannot_access_other_users_address(self):
         other_user = User.objects.create_user(
             email="user@example.com",
             password="example@1234567",
@@ -96,10 +124,12 @@ class TestAddressAPI:
         other_address = Address.objects.create(profile=other_profile, title="Other", address_line_1="999", city="Tehran", postal_code="99999", country="Iran")
         url = reverse("accounts:api-v1:address-detail", args=[other_address.id])
         response = self.client.get(url)
-        assert response.status_code == status.HTTP_404_NOT_FOUND  # because queryset filters by request.user'''
+        assert response.status_code == status.HTTP_404_NOT_FOUND  # because queryset filters by request.user"""
 
     def test_cannot_update_other_users_address(self):
-        other_user = User.objects.create_user(email="other@example.com", password="pass")
+        other_user = User.objects.create_user(
+            email="other@example.com", password="pass"
+        )
         other_profile = Profile.objects.get(user=other_user)
         address = Address.objects.create(
             profile=other_profile,
@@ -122,10 +152,28 @@ class TestAddressAPI:
 
     def test_get_default_address(self):
         # Create two addresses, only one default
-        Address.objects.create(profile=self.profile, title="Home", address_line_1="123", city="Tehran", postal_code="11111", country="Iran", is_default=False)
-        addr2 = Address.objects.create(profile=self.profile, title="Office", address_line_1="456", city="Tehran", postal_code="22222", country="Iran", is_default=True)
+        Address.objects.create(
+            profile=self.profile,
+            title="Home",
+            address_line_1="123",
+            city="Tehran",
+            postal_code="11111",
+            country="Iran",
+            is_default=False,
+        )
+        addr2 = Address.objects.create(
+            profile=self.profile,
+            title="Office",
+            address_line_1="456",
+            city="Tehran",
+            postal_code="22222",
+            country="Iran",
+            is_default=True,
+        )
 
-        url = reverse("accounts:api-v1:address-default-address")  # matches @action url_path
+        url = reverse(
+            "accounts:api-v1:address-default-address"
+        )  # matches @action url_path
         response = self.client.get(url)
         assert response.status_code == status.HTTP_200_OK
         assert response.data["id"] == addr2.id

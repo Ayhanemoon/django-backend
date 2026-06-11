@@ -6,12 +6,16 @@ from django.db import migrations, models
 class Migration(migrations.Migration):
 
     dependencies = [
-        ('accounts', '0011_alter_address_profile'),
+        ("accounts", "0011_alter_address_profile"),
     ]
 
     operations = [
         migrations.AddConstraint(
-            model_name='address',
-            constraint=models.UniqueConstraint(condition=models.Q(('is_default', True)), fields=('profile',), name='unique_default_address_per_profile'),
+            model_name="address",
+            constraint=models.UniqueConstraint(
+                condition=models.Q(("is_default", True)),
+                fields=("profile",),
+                name="unique_default_address_per_profile",
+            ),
         ),
     ]

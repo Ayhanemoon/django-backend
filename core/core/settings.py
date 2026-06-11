@@ -55,6 +55,8 @@ INSTALLED_APPS = [
     "django_celery_beat",
     "shop.orders",
     "shop.products",
+    "shop.payments",
+    "shop.cart",
 ]
 
 MIDDLEWARE = [
@@ -175,7 +177,7 @@ EMAIL_PORT = 25
 SWAGGER_USE_COMPAT_RENDERERS = False
 
 # Celery Configs
-CELERY_BROKER_URL='redis://redis:6379/1'
+CELERY_BROKER_URL = "redis://redis:6379/1"
 
 # Caching Configs
 CACHES = {
@@ -184,6 +186,6 @@ CACHES = {
         "LOCATION": "redis://redis:6379/2",
         "OPTIONS": {
             "CLIENT_CLASS": "django_redis.client.DefaultClient",
-        }
+        },
     }
 }

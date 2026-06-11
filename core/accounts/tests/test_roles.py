@@ -21,6 +21,6 @@ def test_setup_roles_groups_exist():
     # Blog Writer should only have Post/Category permissions (if they exist)
     blog_writer = Group.objects.get(name="Blog Writer")
     for perm in blog_writer.permissions.all():
-        assert perm.content_type.app_label == "blog", (
-            f"Blog Writer should only have blog permissions, found {perm}"
-        )
+        assert (
+            perm.content_type.app_label == "blog"
+        ), f"Blog Writer should only have blog permissions, found {perm}"

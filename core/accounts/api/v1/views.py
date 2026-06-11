@@ -20,7 +20,7 @@ from .serializers import (
     PasswordResetRequestEmailSerializer,
     PasswordResetTokenVerificationSerializer,
     SetNewPasswordSerializer,
-    AddressSerializer
+    AddressSerializer,
 )
 from ..utils import Util
 
@@ -286,7 +286,11 @@ class AddressViewSet(viewsets.ModelViewSet):
         """
         Retrieve the default address for the logged-in user's profile.
         """
-        default_address = Address.objects.alive().filter(profile=request.user.profile, is_default=True).first()
+        default_address = (
+            Address.objects.alive()
+            .filter(profile=request.user.profile, is_default=True)
+            .first()
+        )
         if not default_address:
             return Response(
                 {"detail": "No default address found."},

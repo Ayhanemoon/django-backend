@@ -6,21 +6,23 @@ from django.db import migrations, models
 class Migration(migrations.Migration):
 
     dependencies = [
-        ('accounts', '0006_alter_address_user'),
+        ("accounts", "0006_alter_address_user"),
     ]
 
     operations = [
         migrations.RemoveIndex(
-            model_name='address',
-            name='accounts_ad_user_id_c8244c_idx',
+            model_name="address",
+            name="accounts_ad_user_id_c8244c_idx",
         ),
         migrations.RenameField(
-            model_name='address',
-            old_name='user',
-            new_name='profile',
+            model_name="address",
+            old_name="user",
+            new_name="profile",
         ),
         migrations.AddIndex(
-            model_name='address',
-            index=models.Index(fields=['profile', 'is_default'], name='accounts_ad_profile_36d397_idx'),
+            model_name="address",
+            index=models.Index(
+                fields=["profile", "is_default"], name="accounts_ad_profile_36d397_idx"
+            ),
         ),
     ]

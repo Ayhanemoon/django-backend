@@ -12,7 +12,7 @@ from .views import (
     DiscardAuthTokenApiView,
     JWTObtainPairTokenApiView,
     ProfileApiView,
-    AddressViewSet
+    AddressViewSet,
 )
 from rest_framework_simplejwt.views import (
     TokenRefreshView,

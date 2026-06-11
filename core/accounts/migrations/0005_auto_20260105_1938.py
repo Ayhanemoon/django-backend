@@ -8,34 +8,57 @@ import django.db.models.deletion
 class Migration(migrations.Migration):
 
     dependencies = [
-        ('accounts', '0004_auto_20251230_0703'),
+        ("accounts", "0004_auto_20251230_0703"),
     ]
 
     operations = [
         migrations.CreateModel(
-            name='Address',
+            name="Address",
             fields=[
-                ('id', models.BigAutoField(auto_created=True, primary_key=True, serialize=False, verbose_name='ID')),
-                ('title', models.CharField(help_text='e.g. Home, Office', max_length=100)),
-                ('receiver_name', models.CharField(max_length=255)),
-                ('phone_number', models.CharField(max_length=20)),
-                ('country', models.CharField(default='Iran', max_length=100)),
-                ('state', models.CharField(max_length=100)),
-                ('city', models.CharField(max_length=100)),
-                ('postal_code', models.CharField(max_length=20)),
-                ('address_line_1', models.CharField(max_length=255)),
-                ('address_line_2', models.CharField(blank=True, max_length=255, null=True)),
-                ('is_default', models.BooleanField(default=False)),
-                ('created_at', models.DateTimeField(auto_now_add=True)),
-                ('updated_at', models.DateTimeField(auto_now=True)),
-                ('user', models.ForeignKey(on_delete=django.db.models.deletion.CASCADE, related_name='addresses', to=settings.AUTH_USER_MODEL)),
+                (
+                    "id",
+                    models.BigAutoField(
+                        auto_created=True,
+                        primary_key=True,
+                        serialize=False,
+                        verbose_name="ID",
+                    ),
+                ),
+                (
+                    "title",
+                    models.CharField(help_text="e.g. Home, Office", max_length=100),
+                ),
+                ("receiver_name", models.CharField(max_length=255)),
+                ("phone_number", models.CharField(max_length=20)),
+                ("country", models.CharField(default="Iran", max_length=100)),
+                ("state", models.CharField(max_length=100)),
+                ("city", models.CharField(max_length=100)),
+                ("postal_code", models.CharField(max_length=20)),
+                ("address_line_1", models.CharField(max_length=255)),
+                (
+                    "address_line_2",
+                    models.CharField(blank=True, max_length=255, null=True),
+                ),
+                ("is_default", models.BooleanField(default=False)),
+                ("created_at", models.DateTimeField(auto_now_add=True)),
+                ("updated_at", models.DateTimeField(auto_now=True)),
+                (
+                    "user",
+                    models.ForeignKey(
+                        on_delete=django.db.models.deletion.CASCADE,
+                        related_name="addresses",
+                        to=settings.AUTH_USER_MODEL,
+                    ),
+                ),
             ],
             options={
-                'ordering': ['-is_default', '-created_at'],
+                "ordering": ["-is_default", "-created_at"],
             },
         ),
         migrations.AddIndex(
-            model_name='address',
-            index=models.Index(fields=['user', 'is_default'], name='accounts_ad_user_id_c8244c_idx'),
+            model_name="address",
+            index=models.Index(
+                fields=["user", "is_default"], name="accounts_ad_user_id_c8244c_idx"
+            ),
         ),
     ]

@@ -6,30 +6,36 @@ from django.db import migrations, models
 class Migration(migrations.Migration):
 
     dependencies = [
-        ('orders', '0001_initial'),
+        ("orders", "0001_initial"),
     ]
 
     operations = [
         migrations.AlterModelOptions(
-            name='order',
-            options={'ordering': ['-created_at']},
+            name="order",
+            options={"ordering": ["-created_at"]},
         ),
         migrations.AddField(
-            model_name='order',
-            name='address_snapshot',
-            field=models.JSONField(blank=True, help_text='Immutable snapshot of the address at the time of order placement', null=True),
+            model_name="order",
+            name="address_snapshot",
+            field=models.JSONField(
+                blank=True,
+                help_text="Immutable snapshot of the address at the time of order placement",
+                null=True,
+            ),
         ),
         migrations.AddField(
-            model_name='order',
-            name='status',
-            field=models.CharField(default='pending', max_length=50),
+            model_name="order",
+            name="status",
+            field=models.CharField(default="pending", max_length=50),
         ),
         migrations.AddIndex(
-            model_name='order',
-            index=models.Index(fields=['profile'], name='orders_orde_profile_1e3b4e_idx'),
+            model_name="order",
+            index=models.Index(
+                fields=["profile"], name="orders_orde_profile_1e3b4e_idx"
+            ),
         ),
         migrations.AddIndex(
-            model_name='order',
-            index=models.Index(fields=['status'], name='orders_orde_status_c6dd84_idx'),
+            model_name="order",
+            index=models.Index(fields=["status"], name="orders_orde_status_c6dd84_idx"),
         ),
     ]
