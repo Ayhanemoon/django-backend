@@ -42,6 +42,7 @@ urlpatterns = [
     path("accounts/", include("accounts.urls")),
     path("blog/", include("blog.urls")),
     path("shop/api/v1/", include("shop.urls")),
+    path("admin/api/v1/", include("shop.admin.urls")),
     # path("shop-orders/", include("shop.orders.urls")),
     # path("shop-products/", include("shop.products.urls")),
     # path("payments/", include("shop.payments.urls")),

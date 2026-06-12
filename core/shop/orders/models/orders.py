@@ -1,4 +1,5 @@
 from django.db import models, transaction
+from rest_framework.exceptions import ValidationError
 from accounts.models import Profile
 from shop.products.models import Inventory
 
@@ -13,14 +14,14 @@ class Order(models.Model):
         PROCESSING = "processing", "Processing"
         SHIPPED = "shipped", "Shipped"
         DELIVERED = "delivered", "Delivered"
-        CANCELED = "canceled", "Canceled"
+        CANCELLED = "cancelled", "Cancelled"
 
         choices = [
             PENDING,
             PROCESSING,
             SHIPPED,
             DELIVERED,
-            CANCELED,
+            CANCELLED,
         ]
 
     profile = models.ForeignKey(
@@ -50,7 +51,7 @@ class Order(models.Model):
         return f"Order #{self.id} - {self.profile.user.email}"
     
     def cancel(self):
-        if self.status == "cancelled":
+        if self.status == self.Status.CANCELLED:
             return
 
         with transaction.atomic():
@@ -59,10 +60,12 @@ class Order(models.Model):
                     product_id=item.product_id
                 )
 
-                inventory.reserved -= item.quantity
-                inventory.save(update_fields=["reserved"])
+                inventory.release(
+                    quantity=item.quantity,
+                    order_id=self.id,
+                )
 
-            self.status = "cancelled"
+            self.status = self.Status.CANCELLED
             self.save(update_fields=["status"])
     
     def mark_paid(self):
@@ -77,9 +80,30 @@ class Order(models.Model):
                 )
 
                 # finalize reservation → actual stock deduction
-                inventory.stock -= item.quantity
-                inventory.reserved -= item.quantity
-                inventory.save(update_fields=["stock", "reserved"])
+                inventory.deduct(
+                    quantity=item.quantity,
+                    order_id=self.id,
+                )
 
             self.status = "paid"
             self.save(update_fields=["status"])
+
+    def mark_shipped(self):
+        if self.status != self.Status.PROCESSING:
+            raise ValidationError("Only processing orders can be shipped.")
+
+        self.status = self.Status.SHIPPED
+        self.save(update_fields=["status"])
+
+
+    def mark_delivered(self):
+        if self.status != self.Status.SHIPPED:
+            raise ValidationError("Only shipped orders can be delivered.")
+
+        self.status = self.Status.DELIVERED
+        self.save(update_fields=["status"])    
+
+class CheckoutRequestLog(models.Model):
+    key = models.CharField(max_length=255, unique=True)
+    profile = models.ForeignKey(Profile, on_delete=models.CASCADE)
+    created_at = models.DateTimeField(auto_now_add=True)

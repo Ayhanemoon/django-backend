@@ -1,36 +1,46 @@
-from rest_framework import viewsets, status
+from rest_framework import status, viewsets
 from rest_framework.decorators import action
 from rest_framework.permissions import IsAuthenticated
 from rest_framework.response import Response
-from rest_framework import status
+
 from shop.orders.models import Order
-from .serializers import OrderSerializer, OrderCreateSerializer, OrderDetailSerializer,CheckoutSerializer
+from .serializers import (
+    OrderSerializer,
+    OrderDetailSerializer,
+    CheckoutSerializer,
+)
 
 
-class OrderViewSet(viewsets.ModelViewSet):
+class OrderViewSet(viewsets.ReadOnlyModelViewSet):
     """
-    Order API.
-    Users can list and create their own orders.
-    Orders are immutable after creation (no update/delete by user).
+    Users can:
+    - List their orders
+    - Retrieve order details
+    - Checkout (create order from cart)
+    - Cancel eligible orders
+
+    Orders cannot be directly created, updated, or deleted.
     """
 
     permission_classes = [IsAuthenticated]
 
+    def get_queryset(self):
+        return Order.objects.filter(
+            profile=self.request.user.profile
+        )
+
     def get_serializer_class(self):
-        """Return appropriate serializer class based on action."""
-        if self.action == "create":
-            return OrderCreateSerializer
         if self.action == "retrieve":
             return OrderDetailSerializer
+
+        if self.action == "checkout":
+            return CheckoutSerializer
+
         return OrderSerializer
 
-    def get_queryset(self):
-        """Retrieve orders for the authenticated user's profile."""
-        return Order.objects.filter(profile=self.request.user.profile)
-
-    def create(self, request, *args, **kwargs):
-        """Create a new order with an address snapshot."""
-        serializer = OrderCreateSerializer(
+    @action(detail=False, methods=["post"])
+    def checkout(self, request):
+        serializer = CheckoutSerializer(
             data=request.data,
             context={"request": request},
         )
@@ -38,30 +48,19 @@ class OrderViewSet(viewsets.ModelViewSet):
 
         order = serializer.save()
 
-        output = OrderSerializer(order, context={"request": request})
-        return Response(output.data, status=status.HTTP_201_CREATED)
-
-    # Disable updates and deletes for users
-    def update(self, request, *args, **kwargs):
         return Response(
-            {"detail": "Orders cannot be updated."}, status=status.HTTP_403_FORBIDDEN
+            OrderDetailSerializer(order).data,
+            status=status.HTTP_201_CREATED,
         )
 
-    def partial_update(self, request, *args, **kwargs):
-        return Response(
-            {"detail": "Orders cannot be updated."}, status=status.HTTP_403_FORBIDDEN
-        )
-
-    def destroy(self, request, *args, **kwargs):
-        return Response(
-            {"detail": "Orders cannot be deleted."}, status=status.HTTP_403_FORBIDDEN
-        )
-    
     @action(detail=True, methods=["post"])
     def cancel(self, request, pk=None):
         order = self.get_object()
 
-        if order.status in ["paid", "cancelled"]:
+        if order.status in [
+            Order.OrderStatus.PAID,
+            Order.OrderStatus.CANCELLED,
+        ]:
             return Response(
                 {"detail": "Order cannot be cancelled."},
                 status=status.HTTP_400_BAD_REQUEST,
@@ -69,21 +68,8 @@ class OrderViewSet(viewsets.ModelViewSet):
 
         order.cancel()
 
-        return Response({"detail": "Order cancelled."})
-
-    @action(detail=False, methods=["post"])
-    def checkout(self, request):
-
-        serializer = CheckoutSerializer(
-            data=request.data,
-            context={"request": request},
-        )
-
-        serializer.is_valid(raise_exception=True)
-
-        order = serializer.save()
-
         return Response(
-            OrderSerializer(order).data,
-            status=status.HTTP_201_CREATED,
+            {"detail": "Order cancelled."},
+            status=status.HTTP_200_OK,
         )
+    

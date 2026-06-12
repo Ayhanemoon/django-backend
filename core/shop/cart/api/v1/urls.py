@@ -1,7 +1,7 @@
 from rest_framework.routers import DefaultRouter
 from .views import CartViewSet
 
-app_name = "api-v1"
+app_name = "cart-api-v1"
 
 router = DefaultRouter()
 router.register("", CartViewSet, basename="cart")

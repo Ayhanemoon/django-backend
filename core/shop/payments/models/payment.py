@@ -1,6 +1,7 @@
-from django.db import models,transaction
+from django.db import models, transaction
+
 from shop.orders.models import Order
-from shop.products.models import Inventory
+
 
 class Payment(models.Model):
 
@@ -36,32 +37,23 @@ class Payment(models.Model):
 
     created_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)
-    
+
+    @transaction.atomic
     def mark_success(self):
-        if self.status != "pending":
+        if self.status != self.Status.PENDING:
             return
 
-        self.status = "success"
+        self.status = self.Status.SUCCESS
         self.save(update_fields=["status"])
 
         self.order.mark_paid()
 
+    @transaction.atomic
     def mark_failed(self):
-
-        if self.status != "pending":
+        if self.status != self.Status.PENDING:
             return
 
-        with transaction.atomic():
-            for item in self.order.items.all():
-                inventory = Inventory.objects.select_for_update().get(
-                    product_id=item.product_id
-                )
+        self.status = self.Status.FAILED
+        self.save(update_fields=["status"])
 
-                inventory.reserved -= item.quantity
-                inventory.save(update_fields=["reserved"])
-
-            self.status = "failed"
-            self.save(update_fields=["status"])
-
-            self.order.status = "cancelled"
-            self.order.save(update_fields=["status"])
+        self.order.cancel()

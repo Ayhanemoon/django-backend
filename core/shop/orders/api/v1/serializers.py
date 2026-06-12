@@ -1,8 +1,8 @@
 from django.db import transaction
 from rest_framework import serializers
-from shop.orders.models import Order, OrderItem
+from shop.orders.models import Order, OrderItem, CheckoutRequestLog
 from accounts.models import Address
-from shop.products.models import Product, Inventory
+from shop.products.models import Inventory
 from shop.cart.models import Cart
 
 
@@ -144,26 +144,60 @@ class OrderDetailSerializer(serializers.ModelSerializer):
 
 class CheckoutSerializer(serializers.Serializer):
     address_id = serializers.IntegerField()
+    idempotency_key = serializers.CharField(required=True)
 
     @transaction.atomic
     def create(self, validated_data):
         request = self.context["request"]
         profile = request.user.profile
 
+        # ----------------------------
+        # 1. Idempotency protection
+        # ----------------------------
+        key = validated_data["idempotency_key"]
+
+        if CheckoutRequestLog.objects.filter(key=key, profile=profile).exists():
+            raise serializers.ValidationError("Duplicate checkout request.")
+
+        # ----------------------------
+        # 2. Lock cart
+        # ----------------------------
+        cart = (
+            Cart.objects
+            .select_for_update()
+            .prefetch_related("items__product")
+            .get(profile=profile)
+        )
+
+        items = list(cart.items.select_related("product"))
+
+        if not items:
+            raise serializers.ValidationError("Cart is empty.")
+
+        # ----------------------------
+        # 3. Validate address
+        # ----------------------------
         address = Address.objects.alive().get(
             id=validated_data["address_id"],
             profile=profile,
         )
 
-        cart = Cart.objects.prefetch_related(
-            "items__product"
-        ).get(profile=profile)
-
-        if not cart.items.exists():
-            raise serializers.ValidationError(
-                "Cart is empty."
+        # ----------------------------
+        # 4. Lock + validate inventory first
+        # ----------------------------
+        for item in items:
+            inventory = Inventory.objects.select_for_update().get(
+                product=item.product
             )
 
+            if inventory.available_stock() < item.quantity:
+                raise serializers.ValidationError(
+                    f"Not enough stock for {item.product.title}"
+                )
+
+        # ----------------------------
+        # 5. Create order snapshot
+        # ----------------------------
         snapshot = {
             "receiver_name": address.receiver_name,
             "phone_number": address.phone_number,
@@ -181,36 +215,48 @@ class CheckoutSerializer(serializers.Serializer):
             total_amount=0,
         )
 
+        # ----------------------------
+        # 6. Reserve inventory + create items
+        # ----------------------------
         total = 0
 
-        for cart_item in cart.items.all():
-
+        for item in items:
             inventory = Inventory.objects.select_for_update().get(
-                product=cart_item.product
+                product=item.product
             )
 
-            if inventory.available_stock() < cart_item.quantity:
-                raise serializers.ValidationError(
-                    f"Not enough stock for {cart_item.product.title}"
-                )
-
-            inventory.reserved += cart_item.quantity
-            inventory.save(update_fields=["reserved"])
+            inventory.reserve(
+                quantity=item.quantity,
+                order_id=order.id,
+            )
 
             order_item = OrderItem.objects.create(
                 order=order,
-                product_id=cart_item.product.id,
-                product_title=cart_item.product.title,
-                unit_price=cart_item.product.price,
-                quantity=cart_item.quantity,
+                product_id=item.product.id,
+                product_title=item.product.title,
+                unit_price=item.product.price,
+                quantity=item.quantity,
             )
 
             total += order_item.line_total
 
+        # ----------------------------
+        # 7. Finalize order total
+        # ----------------------------
         order.total_amount = total
         order.save(update_fields=["total_amount"])
 
-        # Clear cart after successful checkout
+        # ----------------------------
+        # 8. Clear cart
+        # ----------------------------
         cart.items.all().delete()
+
+        # ----------------------------
+        # 9. Store idempotency key
+        # ----------------------------
+        CheckoutRequestLog.objects.create(
+            key=key,
+            profile=profile
+        )
 
         return order

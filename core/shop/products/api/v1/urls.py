@@ -2,7 +2,7 @@ from rest_framework.routers import DefaultRouter
 from django.urls import path, include
 from .views import ProductViewSet,CategoryViewSet
 
-app_name = "api-v1"
+app_name = "product-api-v1"
 
 router = DefaultRouter()
 router.register(r"", ProductViewSet, basename="product")
