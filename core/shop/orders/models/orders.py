@@ -34,6 +34,15 @@ class Order(models.Model):
         blank=True,
     )
     status = models.CharField(max_length=50, choices=Status.choices, default=Status.PENDING)
+    coupon_code = models.CharField(
+        max_length=50,
+        null=True,
+        blank=True,
+    )
+
+    discount_amount = models.PositiveIntegerField(
+        default=0,
+    )
     total_amount = models.PositiveIntegerField(default=0)
 
     created_at = models.DateTimeField(auto_now_add=True)

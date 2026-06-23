@@ -3,3 +3,4 @@ from .product_image import ProductImage
 from .category import Category
 from .inventory import Inventory
 from .inventory_movement import InventoryMovement
+from .discount import Coupon, CouponUsage

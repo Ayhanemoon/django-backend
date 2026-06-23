@@ -1,6 +1,6 @@
 from rest_framework.routers import DefaultRouter
 from django.urls import path, include
-from .views import ProductViewSet,CategoryViewSet
+from .views import ProductViewSet,CategoryViewSet, CouponValidateAPIView
 
 app_name = "product-api-v1"
 
@@ -10,4 +10,12 @@ router.register(r"categories", CategoryViewSet, basename="category")
 
 urlpatterns = [
     path("", include(router.urls)),
+]
+
+urlpatterns += [
+    path(
+        "coupons/validate/",
+        CouponValidateAPIView.as_view(),
+        name="coupon-validate",
+    ),
 ]

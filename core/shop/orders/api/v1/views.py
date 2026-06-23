@@ -73,3 +73,11 @@ class OrderViewSet(viewsets.ReadOnlyModelViewSet):
             status=status.HTTP_200_OK,
         )
     
+    @action(detail=True, methods=["get"])
+    def invoice(self, request, pk=None):
+
+        order = self.get_object()
+
+        serializer = OrderDetailSerializer(order)
+
+        return Response(serializer.data)

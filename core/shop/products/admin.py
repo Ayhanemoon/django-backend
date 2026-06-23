@@ -1,5 +1,5 @@
 from django.contrib import admin
-from shop.products.models import Product, Category, ProductImage, Inventory
+from shop.products.models import Product, Category, ProductImage, Inventory, Coupon, CouponUsage
 
 @admin.register(Category)
 class CategoryAdmin(admin.ModelAdmin):
@@ -25,3 +25,7 @@ admin.site.register(ProductImage)
 class InventoryAdmin(admin.ModelAdmin):
     list_display = ["product", "stock", "reserved"]
     search_fields = ["product__title"]
+
+admin.site.register(Coupon)
+
+admin.site.register(CouponUsage)

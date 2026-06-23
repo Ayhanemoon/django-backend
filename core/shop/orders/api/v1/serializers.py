@@ -2,7 +2,7 @@ from django.db import transaction
 from rest_framework import serializers
 from shop.orders.models import Order, OrderItem, CheckoutRequestLog
 from accounts.models import Address
-from shop.products.models import Inventory
+from shop.products.models import Inventory, Coupon
 from shop.cart.models import Cart
 
 
@@ -145,6 +145,7 @@ class OrderDetailSerializer(serializers.ModelSerializer):
 class CheckoutSerializer(serializers.Serializer):
     address_id = serializers.IntegerField()
     idempotency_key = serializers.CharField(required=True)
+    coupon_code = serializers.CharField(required=False, allow_blank=True)
 
     @transaction.atomic
     def create(self, validated_data):
@@ -156,8 +157,13 @@ class CheckoutSerializer(serializers.Serializer):
         # ----------------------------
         key = validated_data["idempotency_key"]
 
-        if CheckoutRequestLog.objects.filter(key=key, profile=profile).exists():
-            raise serializers.ValidationError("Duplicate checkout request.")
+        if CheckoutRequestLog.objects.filter(
+            key=key,
+            profile=profile,
+        ).exists():
+            raise serializers.ValidationError(
+                "Duplicate checkout request."
+            )
 
         # ----------------------------
         # 2. Lock cart
@@ -169,10 +175,14 @@ class CheckoutSerializer(serializers.Serializer):
             .get(profile=profile)
         )
 
-        items = list(cart.items.select_related("product"))
+        items = list(
+            cart.items.select_related("product")
+        )
 
         if not items:
-            raise serializers.ValidationError("Cart is empty.")
+            raise serializers.ValidationError(
+                "Cart is empty."
+            )
 
         # ----------------------------
         # 3. Validate address
@@ -183,20 +193,20 @@ class CheckoutSerializer(serializers.Serializer):
         )
 
         # ----------------------------
-        # 4. Lock + validate inventory first
+        # 4. Lock + validate inventory
         # ----------------------------
         for item in items:
             inventory = Inventory.objects.select_for_update().get(
                 product=item.product
             )
 
-            if inventory.available_stock() < item.quantity:
+            if inventory.available_stock < item.quantity:
                 raise serializers.ValidationError(
                     f"Not enough stock for {item.product.title}"
                 )
 
         # ----------------------------
-        # 5. Create order snapshot
+        # 5. Address snapshot
         # ----------------------------
         snapshot = {
             "receiver_name": address.receiver_name,
@@ -209,18 +219,69 @@ class CheckoutSerializer(serializers.Serializer):
             "address_line_2": address.address_line_2,
         }
 
+        # ----------------------------
+        # 6. Calculate subtotal
+        # ----------------------------
+        subtotal = 0
+
+        for item in items:
+            subtotal += (
+                item.product.price * item.quantity
+            )
+
+        # ----------------------------
+        # 7. Coupon validation
+        # ----------------------------
+        coupon = None
+        discount_amount = 0
+
+        coupon_code = validated_data.get(
+            "coupon_code"
+        )
+
+        if coupon_code:
+
+            try:
+                coupon = Coupon.objects.get(
+                    code=coupon_code
+                )
+            except Coupon.DoesNotExist:
+                raise serializers.ValidationError(
+                    "Invalid coupon code."
+                )
+
+            if not coupon.is_valid():
+                raise serializers.ValidationError(
+                    "Coupon is not valid."
+                )
+
+            if subtotal < coupon.min_order_amount:
+                raise serializers.ValidationError(
+                    "Minimum order amount not reached."
+                )
+
+            discount_amount = coupon.calculate_discount(
+                subtotal
+            )
+
+        final_total = subtotal - discount_amount
+
+        # ----------------------------
+        # 8. Create order
+        # ----------------------------
         order = Order.objects.create(
             profile=profile,
             address_snapshot=snapshot,
-            total_amount=0,
+            total_amount=final_total,
+            coupon_code=coupon.code if coupon else None,
+            discount_amount=discount_amount,
         )
 
         # ----------------------------
-        # 6. Reserve inventory + create items
+        # 9. Reserve inventory
         # ----------------------------
-        total = 0
-
         for item in items:
+
             inventory = Inventory.objects.select_for_update().get(
                 product=item.product
             )
@@ -230,7 +291,7 @@ class CheckoutSerializer(serializers.Serializer):
                 order_id=order.id,
             )
 
-            order_item = OrderItem.objects.create(
+            OrderItem.objects.create(
                 order=order,
                 product_id=item.product.id,
                 product_title=item.product.title,
@@ -238,25 +299,17 @@ class CheckoutSerializer(serializers.Serializer):
                 quantity=item.quantity,
             )
 
-            total += order_item.line_total
-
         # ----------------------------
-        # 7. Finalize order total
-        # ----------------------------
-        order.total_amount = total
-        order.save(update_fields=["total_amount"])
-
-        # ----------------------------
-        # 8. Clear cart
+        # 10. Clear cart
         # ----------------------------
         cart.items.all().delete()
 
         # ----------------------------
-        # 9. Store idempotency key
+        # 11. Save idempotency key
         # ----------------------------
         CheckoutRequestLog.objects.create(
             key=key,
-            profile=profile
+            profile=profile,
         )
 
         return order
