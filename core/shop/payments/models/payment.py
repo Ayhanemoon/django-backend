@@ -52,7 +52,6 @@ class Payment(models.Model):
             self.save(update_fields=["status"])
 
             self.order.mark_paid()
-            send_payment_success_email.delay(self.order.id)
             NotificationService.payment_success(self.order)
 
             if self.order.coupon_code:
