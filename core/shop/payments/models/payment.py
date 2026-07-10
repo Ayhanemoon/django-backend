@@ -1,8 +1,6 @@
-from django.db import models, transaction
+from django.db import models
 
-from shop.notifications.services import NotificationService
 from shop.orders.models import Order
-from shop.products.models import Coupon, CouponUsage
 
 
 class Payment(models.Model):
@@ -39,44 +37,3 @@ class Payment(models.Model):
 
     created_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)
-
-    @transaction.atomic
-    def mark_success(self):
-
-        if self.status != self.Status.PENDING:
-            return
-
-        with transaction.atomic():
-
-            self.status = self.Status.SUCCESS
-            self.save(update_fields=["status"])
-
-            self.order.mark_paid()
-            NotificationService.payment_success(self.order)
-
-            if self.order.coupon_code:
-
-                coupon = Coupon.objects.get(
-                    code=self.order.coupon_code
-                )
-
-                coupon.used_count += 1
-                coupon.save(
-                    update_fields=["used_count"]
-                )
-
-                CouponUsage.objects.create(
-                    coupon=coupon,
-                    profile=self.order.profile,
-                    order=self.order,
-                )
-
-    @transaction.atomic
-    def mark_failed(self):
-        if self.status != self.Status.PENDING:
-            return
-
-        self.status = self.Status.FAILED
-        self.save(update_fields=["status"])
-
-        self.order.cancel()

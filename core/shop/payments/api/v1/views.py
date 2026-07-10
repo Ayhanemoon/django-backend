@@ -4,6 +4,7 @@ from rest_framework.permissions import IsAuthenticated
 from rest_framework.response import Response
 
 from shop.payments.models import Payment
+from shop.payments.services import PaymentService
 from .serializers import PaymentSerializer
 
 
@@ -36,7 +37,7 @@ class PaymentViewSet(viewsets.ReadOnlyModelViewSet):
                 status=400,
             )
 
-        payment.mark_success()
+        PaymentService.mark_success(payment)
 
         return Response({
             "detail": "Payment marked as SUCCESS.",
@@ -56,7 +57,7 @@ class PaymentViewSet(viewsets.ReadOnlyModelViewSet):
                 status=400,
             )
 
-        payment.mark_failed()
+        PaymentService.mark_failed(payment)
 
         return Response({
             "detail": "Payment marked as FAILED.",
