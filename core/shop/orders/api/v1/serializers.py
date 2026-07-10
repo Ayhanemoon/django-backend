@@ -1,5 +1,6 @@
 from django.db import transaction
 from rest_framework import serializers
+from shop.notifications.services import NotificationService
 from shop.orders.models import Order, OrderItem, CheckoutRequestLog
 from accounts.models import Address
 from shop.products.models import Inventory, Coupon
@@ -311,5 +312,7 @@ class CheckoutSerializer(serializers.Serializer):
             key=key,
             profile=profile,
         )
+
+        NotificationService.order_created(order)
 
         return order

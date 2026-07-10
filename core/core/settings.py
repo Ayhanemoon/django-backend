@@ -57,6 +57,7 @@ INSTALLED_APPS = [
     "shop.products",
     "shop.payments",
     "shop.cart",
+    "shop.notifications",
 ]
 
 MIDDLEWARE = [
@@ -173,11 +174,14 @@ EMAIL_BACKEND = "django.core.mail.backends.smtp.EmailBackend"
 EMAIL_USE_TLS = False
 EMAIL_HOST = "smtp4dev"
 EMAIL_PORT = 25
+DEFAULT_FROM_EMAIL = "admin@admin.com"
 
 SWAGGER_USE_COMPAT_RENDERERS = False
 
 # Celery Configs
 CELERY_BROKER_URL = "redis://redis:6379/1"
+LOW_STOCK_THRESHOLD = 5
+LOW_STOCK_ALERT_EMAIL = "admin@admin.com"
 
 # Caching Configs
 CACHES = {

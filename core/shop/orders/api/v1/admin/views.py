@@ -5,6 +5,7 @@ from rest_framework.response import Response
 
 from shop.orders.api.v1.serializers import OrderSerializer
 from shop.orders.models import Order
+from shop.notifications.services import NotificationService
    
 class AdminOrderViewSet(viewsets.ReadOnlyModelViewSet):
     """
@@ -21,6 +22,7 @@ class AdminOrderViewSet(viewsets.ReadOnlyModelViewSet):
     def ship(self, request, pk=None):
         order = self.get_object()
         order.mark_shipped()
+        NotificationService.order_shipped(order)
 
         return Response({
             "detail": "Order shipped.",

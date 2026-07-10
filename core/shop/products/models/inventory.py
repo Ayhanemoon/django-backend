@@ -1,4 +1,6 @@
 from django.db import models
+from django.conf import settings
+from shop.notifications.services import NotificationService
 from shop.products.models import Product
 
 
@@ -79,6 +81,9 @@ class Inventory(models.Model):
             quantity=quantity,
             order_id=order_id,
         )
+        
+        if self.available_stock <= settings.LOW_STOCK_THRESHOLD:
+            NotificationService.low_stock(self.product)
 
     def restock(self, quantity, note=None):
         from .inventory_movement import InventoryMovement
