@@ -60,16 +60,15 @@ class Order(models.Model):
         return f"Order #{self.id} - {self.profile.user.email}"
     
     def cancel(self):
+        from shop.products.services import InventoryService
+
         if self.status == self.Status.CANCELLED:
             return
 
         with transaction.atomic():
             for item in self.items.select_related("product"):
-                inventory = Inventory.objects.select_for_update().get(
-                    product_id=item.product_id
-                )
-
-                inventory.release(
+                InventoryService.release(
+                    product_id=item.product_id,
                     quantity=item.quantity,
                     order_id=self.id,
                 )
@@ -78,18 +77,15 @@ class Order(models.Model):
             self.save(update_fields=["status"])
     
     def mark_paid(self):
+        from shop.products.services import InventoryService
 
         if self.status == "paid":
             return
 
         with transaction.atomic():
             for item in self.items.all():
-                inventory = Inventory.objects.select_for_update().get(
-                    product_id=item.product_id
-                )
-
-                # finalize reservation → actual stock deduction
-                inventory.deduct(
+                InventoryService.deduct(
+                    product_id=item.product_id,
                     quantity=item.quantity,
                     order_id=self.id,
                 )

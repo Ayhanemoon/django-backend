@@ -2,6 +2,7 @@ from django.db import transaction
 
 from rest_framework.exceptions import ValidationError
 
+from shop.products.services import InventoryService
 from shop.cart.models import Cart
 from shop.orders.models import Order, OrderItem
 from shop.orders.models import CheckoutRequestLog
@@ -180,16 +181,8 @@ class CheckoutService:
         # ----------------------------
         for item in items:
 
-            inventory = (
-                Inventory.objects
-                .select_for_update()
-                .get(
-                    product=item.product
-                )
-            )
-
-
-            inventory.reserve(
+            InventoryService.reserve(
+                product=item.product,
                 quantity=item.quantity,
                 order_id=order.id,
             )
